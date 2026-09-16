@@ -28,18 +28,20 @@ function App() {
       fetch('https://open.er-api.com/v6/latest/CZK').then(r => r.json()),
       fetch('https://api.metals.live/v1/spot').then(r => r.json()),
     ]).then(([currencyResult, metalsResult]) => {
+      let usdInCzk = fallbackRates.USD
       if (currencyResult.status === 'fulfilled') {
         const r = currencyResult.value?.rates
         if (r?.EUR && r?.USD && r?.GBP) {
           const updatedRates = { CZK: 1, EUR: r.EUR, USD: r.USD, GBP: r.GBP }
           setRates(updatedRates)
+          usdInCzk = r.USD
           setRatesUpdated('Aktualizováno právě teď')
         } else setRatesUpdated('Používáme poslední dostupné kurzy')
       } else setRatesUpdated('Používáme poslední dostupné kurzy')
       if (metalsResult.status === 'fulfilled' && Array.isArray(metalsResult.value)) {
         const quote = (name: string) => metalsResult.value.find((x: Record<string, unknown>) => String(x.metal ?? x.name ?? '').toLowerCase().includes(name))
         const gold = quote('gold')?.price, silver = quote('silver')?.price, platinum = quote('platinum')?.price
-        if (gold && silver && platinum) setMetals({ gold: Number(gold) * fallbackRates.USD, silver: Number(silver) * 32.1507466 * fallbackRates.USD, platinum: Number(platinum) * fallbackRates.USD })
+        if (gold && silver && platinum) setMetals({ gold: Number(gold) * usdInCzk, silver: Number(silver) * 32.1507466 * usdInCzk, platinum: Number(platinum) * usdInCzk })
       }
     })
   }, [])
