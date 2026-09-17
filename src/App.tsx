@@ -88,6 +88,7 @@ function App() {
         {active === 'currency' && <CurrencyCalculator rates={rates} updated={ratesUpdated} />}
         {active === 'loan' && <LoanCalculator />}
         {active === 'invest' && <InvestmentCalculator />}
+        {active !== 'home' && <HelpfulNotes active={active} />}
       </div>
     </section>
     <footer className="shell">utils <span>Výpočty jsou orientační. Před finančním rozhodnutím ověřte podmínky poskytovatele.</span></footer>
@@ -95,6 +96,26 @@ function App() {
 }
 
 function Quote({ label, value }: { label: string; value: string }) { return <div className="quote"><span>{label}</span><b>{value}</b><small>v CZK</small></div> }
+
+function HelpfulNotes({ active }: { active: Tool }) {
+  const notes = active === 'loan'
+    ? [
+      ['Úroková sazba vs. RPSN', 'Úrok je cena za půjčení peněz. RPSN je širší ukazatel, který kromě úroku zohledňuje i některé poplatky a náklady. Pro porovnání nabídek bank je proto užitečnější RPSN.'],
+      ['Kratší splatnost', 'Pět nebo deset let navíc obvykle sníží měsíční splátku, ale výrazně zvýší celkový přeplatek. Porovnání výše ukazuje tento rozdíl na stejném úvěru.'],
+      ['Na co si dát pozor', 'Výpočet je orientační. Skutečná nabídka závisí na fixaci, poplatcích, pojištění, podmínkách banky a vaší bonitě.'],
+    ]
+    : active === 'invest'
+      ? [
+        ['Co znamená potenciální výnos', 'Je to rozdíl mezi odhadovanou hodnotou portfolia a vašimi vklady. Nejde o garantovanou částku ani slib budoucího zhodnocení.'],
+        ['Síla pravidelnosti', 'Pravidelné vklady dávají investici čas využít složené úročení. Delší horizont zároveň pomáhá rozložit běžné výkyvy trhu.'],
+        ['Praktický tip', 'Zkuste porovnat více scénářů výnosu a vkladu. Pro realistický plán počítejte i s poplatky, inflací a rezervou na nečekané výdaje.'],
+      ]
+      : active === 'currency'
+        ? [['Kurz není vždy konečná cena', 'Banky a směnárny mohou k mezibankovnímu kurzu přidat vlastní marži nebo poplatek. Výsledek proto berte jako rychlou orientaci.']]
+        : [['Jak výpočet číst', 'Výsledek vychází z vašich vstupů a slouží jako orientační odhad. Pro přesnější plán zkontrolujte aktuální cenu paliva a reálnou spotřebu.']]
+
+  return <aside className="explanation-list" aria-label="Užitečné vysvětlení">{notes.map(([title, text]) => <div key={title}><strong>{title}</strong><p>{text}</p></div>)}</aside>
+}
 
 function Field({ label, value, onChange, suffix, hint, min = '0', step = 'any' }: { label: string; value: string; onChange: (v: string) => void; suffix: string; hint?: string; min?: string; step?: string }) {
   return <label className="field"><span>{label}</span><div className="input-wrap"><input inputMode="decimal" type="text" min={min} step={step} value={value} onChange={e => onChange(e.target.value)} /><b>{suffix}</b></div>{hint && <small>{hint}</small>}</label>
