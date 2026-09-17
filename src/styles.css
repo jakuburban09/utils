@@ -1,5 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600;1,700&display=swap');
 
+/* Mobile calculator overrides */
+.calculator-wrap .calc-layout { grid-template-columns: minmax(0, 1fr) minmax(0, .88fr); }
+.loan-results, .investment-results { min-width: 0; }
+.stat-grid div { min-width: 0; }
+.calculator-wrap .input-wrap input { font-size: 16px; }
+.loan-comparison { background: #fff; border: 1px solid #dde2ed; border-radius: 11px; padding: 19px; }
+.comparison-row { display: grid; grid-template-columns: 45px 1fr auto; align-items: center; gap: 8px; padding: 10px 0; border-top: 1px solid #eef0f7; color: #59647a; font-size: 10px; }
+.comparison-row b { color: #20273c; }
+.comparison-row span { color: #7659d9; font-weight: 800; }
+.comparison-row em { color: #7c869b; font-style: normal; text-align: right; }
+@media (max-width: 560px) {
+	.comparison-row { grid-template-columns: 45px 1fr; }
+	.comparison-row em { grid-column: 2; text-align: left; }
+}
 :root { font-family: Manrope, sans-serif; color: #f5f6fa; background: #0c1222; font-synthesis: none; }
 * { box-sizing: border-box; } html { scroll-behavior: smooth; } body { margin: 0; min-width: 320px; background: #0c1222; } button, input { font: inherit; } button { cursor: pointer; } .shell { width: min(1160px, calc(100% - 48px)); margin: auto; }
 .nav { height: 86px; display: flex; align-items: center; justify-content: space-between; gap: 24px; border-bottom: 1px solid rgba(220,226,250,.1); } .brand { border: 0; color: #fff; font-size: 21px; font-weight: 800; background: none; letter-spacing: -.8px; display: flex; align-items: center; gap: 7px; } .brand span { display:grid; place-items:center; background:#d8ff71; color:#0c1222; width:27px; height:27px; border-radius:8px; font-family:Georgia; font-style:italic; font-size:25px; }

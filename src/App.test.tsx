@@ -41,10 +41,15 @@ describe('utils kalkulačky', () => {
   it('u úvěru limituje nereálně dlouhou splatnost a umí přepnout na RPSN', () => {
     render(<App />)
     open('Úvěry a hypotéky')
+    expect(screen.getByText('25 let')).toBeInTheDocument()
+    expect(screen.getByText('20 let')).toBeInTheDocument()
+    expect(screen.getByText('15 let')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText(/Úroková sazba/), { target: { value: '5,29' } })
+    expect(screen.getByLabelText(/Úroková sazba/)).toHaveValue('5,29')
     fireEvent.change(screen.getByLabelText(/Doba splatnosti/), { target: { value: '100' } })
-    expect(screen.getByRole('alert')).toHaveTextContent('1 až 50 let')
+    expect(screen.getByRole('alert')).toHaveTextContent('1 až 35 let')
     fireEvent.click(screen.getByRole('button', { name: 'RPSN' }))
-    expect(screen.getByText('Doba splatnosti je pro tuto kalkulačku 1 až 50 let. U velmi dlouhých dob se splátka blíží samotnému měsíčnímu úroku, proto už klesá jen nepatrně.')).toBeInTheDocument()
+    expect(screen.getByText('Doba splatnosti je pro tuto kalkulačku 1 až 35 let.')).toBeInTheDocument()
   })
 
   it('u investic vykreslí detail pro každý rok a upozorní na neplatný horizont', () => {
