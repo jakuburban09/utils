@@ -133,7 +133,8 @@ function Field({ label, value, onChange, suffix, hint, min = '0', step = 'any', 
   const increment = step === 'any' ? 1 : Number(step)
   const adjust = (direction: number) => {
     const next = Math.max(allowNegative ? -100_000_000 : Number(min), number(value) + direction * increment)
-    onChange(groupedInput(String(Number(next.toFixed(6)))))
+    const formatted = String(Number(next.toFixed(6))).replace('.', value.includes(',') ? ',' : '.')
+    onChange(groupedInput(formatted))
   }
   return <div className="field"><label htmlFor={id}>{label}</label><div className="input-wrap"><input id={id} inputMode="decimal" type="text" value={value} onChange={e => onChange(e.target.value)} onBlur={e => onChange(groupedInput(e.target.value))} /><b>{suffix}</b><span className="stepper" role="group" aria-label={`Upravit ${label}`}><button type="button" aria-label="Snížit" title={`Snížit: ${label}`} onClick={() => adjust(-1)}>−</button><button type="button" aria-label="Zvýšit" title={`Zvýšit: ${label}`} onClick={() => adjust(1)}>+</button></span></div>{hint && <small>{hint}</small>}</div>
 }
@@ -167,6 +168,7 @@ function LoanCalculator() {
   const [rate, setRate] = useState('5,29')
   const [years, setYears] = useState('25')
   const [monthlyChange, setMonthlyChange] = useState('0')
+  const [showFullSchedule, setShowFullSchedule] = useState(false)
   const [rateKind, setRateKind] = useState<'interest' | 'rpsn'>('interest')
   const principal = number(amount), termYears = number(years), months = Math.max(1, termYears * 12)
   const annualRate = number(rate) / 100
@@ -183,7 +185,22 @@ function LoanCalculator() {
     }
     return null
   }, [adjustedPayment, monthlyRate, principal])
-  const schedule = useMemo(() => Array.from({ length: Math.min(6, Math.max(1, termYears)) }, (_, i) => { const n = Math.min(months, (i + 1) * 12); const balance = monthlyRate ? principal * (((1 + monthlyRate) ** months - (1 + monthlyRate) ** n) / ((1 + monthlyRate) ** months - 1)) : principal * (1 - n / months); return { year: i + 1, balance: Math.max(0, balance) } }), [principal, months, monthlyRate, termYears])
+  const schedule = useMemo(() => {
+    const years: { year: number; balance: number; principalPaid: number; interestPaid: number }[] = []
+    let balance = principal
+    for (let month = 1; month <= months; month++) {
+      const interestPaid = balance * monthlyRate
+      const principalPaid = Math.min(balance, Math.max(0, payment - interestPaid))
+      balance = Math.max(0, balance - principalPaid)
+      const yearIndex = Math.ceil(month / 12) - 1
+      years[yearIndex] ??= { year: yearIndex + 1, balance: principal, principalPaid: 0, interestPaid: 0 }
+      years[yearIndex].balance = balance
+      years[yearIndex].principalPaid += principalPaid
+      years[yearIndex].interestPaid += interestPaid
+    }
+    return years
+  }, [principal, months, monthlyRate, payment])
+  const visibleSchedule = showFullSchedule ? schedule : schedule.slice(0, 5)
   const comparisonTerms = [termYears, termYears - 5, termYears - 10].filter((term, index, terms) => term > 0 && terms.indexOf(term) === index)
   const comparison = comparisonTerms.map(term => { const comparisonMonths = term * 12; const comparisonPayment = monthlyRate ? principal * monthlyRate * (1 + monthlyRate) ** comparisonMonths / ((1 + monthlyRate) ** comparisonMonths - 1) : principal / comparisonMonths; const comparisonTotal = comparisonPayment * comparisonMonths; return { term, payment: comparisonPayment, overpay: comparisonTotal - principal } })
   const formatTerm = (duration: number) => {
@@ -200,8 +217,8 @@ function LoanCalculator() {
       <div className="form-title"><span>⌁</span><div><h3>Parametry úvěru</h3><p>Anuitní splácení s pevnou sazbou.</p></div></div>
       <div className="segmented" aria-label="Typ sazby"><button className={rateKind === 'interest' ? 'active' : ''} onClick={() => setRateKind('interest')}>Úroková sazba</button><button className={rateKind === 'rpsn' ? 'active' : ''} onClick={() => setRateKind('rpsn')}>RPSN</button></div>
       <div className="fields one-col">
-        <Field label="Výše úvěru" value={amount} onChange={setAmount} suffix="Kč" step="10000" />
-        <Field label={rateKind === 'interest' ? 'Úroková sazba' : 'RPSN'} value={rate} onChange={setRate} suffix="% ročně" step="0.01" />
+        <Field label="Výše úvěru" value={amount} onChange={setAmount} suffix="Kč" step="50000" />
+        <Field label={rateKind === 'interest' ? 'Úroková sazba' : 'RPSN'} value={rate} onChange={setRate} suffix="% ročně" step="0.1" />
         <Field label="Doba splatnosti" value={years} onChange={setYears} suffix="let" step="1" min="1" />
         <Field label="Měsíční změna splátky" value={monthlyChange} onChange={setMonthlyChange} suffix="Kč / měs." step="500" allowNegative hint="Kladná částka splátku navýší, záporná ji sníží." />
       </div>
@@ -222,7 +239,7 @@ function LoanCalculator() {
           </> : <p>Změněná splátka musí být vyšší než měsíční úrok. Zvyšte ji, aby se snižovala i jistina.</p>}
         </div>}
         <div className="loan-comparison"><div className="chart-head"><b>Porovnání délky splácení</b><small>měsíční splátka a přeplatek</small></div>{comparison.map(item => <div className="comparison-row" key={item.term}><b>{item.term} let</b><span>{money(item.payment)} / měs.</span><em>{money(item.overpay)} přeplatek</em></div>)}</div>
-        <div className="mini-chart"><div className="chart-head"><b>Vývoj zbývajícího dluhu</b><small>prvních {schedule.length} let</small></div>{schedule.map(item => <div className="bar-row" key={item.year}><span>{item.year}. rok</span><i><b style={{ width: `${Math.max(3, item.balance / principal * 100)}%` }} /></i><em>{money(item.balance)}</em></div>)}</div>
+        <div className="mini-chart loan-schedule"><div className="chart-head"><b>Splátkový přehled</b><small>{showFullSchedule ? 'celá doba' : 'prvních 5 let'}</small></div><div className="schedule-legend"><span><i className="schedule-principal" /> Splacená jistina</span><span><i className="schedule-interest" /> Zaplacené úroky</span></div>{visibleSchedule.map(item => <div className="loan-year-row" key={item.year}><div className="loan-year-heading"><b>{item.year}. rok</b><strong>Zbývá {money(item.balance)}</strong></div><div className="loan-balance-track" aria-label={`Zůstatek ${money(item.balance)} z ${money(principal)}`}><i style={{ width: `${Math.max(0, item.balance / principal * 100)}%` }} /></div><div className="loan-year-details"><span>Jistina <b>{money(item.principalPaid)}</b></span><span>Úroky <b>{money(item.interestPaid)}</b></span></div></div>)}{schedule.length > 5 && <button type="button" className="schedule-toggle" onClick={() => setShowFullSchedule(value => !value)}>{showFullSchedule ? 'Zobrazit jen prvních 5 let' : 'Zobrazit celý graf'}</button>}</div>
         <div className="tip violet-tip">✦ {rateKind === 'rpsn' ? 'RPSN je orientační převod na měsíční sazbu; skutečné poplatky se mohou lišit.' : 'Mimořádná splátka může zkrátit dobu úvěru nebo snížit budoucí úroky.'}</div>
       </>}
     </div>

@@ -55,13 +55,52 @@
 .growth-detail span { display: flex; flex-direction: column; gap: 3px; }
 .growth-detail b { color: #20273c; font-size: 12px; }
 .growth-detail .loss { color: #c25252; }
+.calculator-wrap .growth { height: auto; overflow: visible; }
+.calculator-wrap .growth-detail { position: relative; z-index: 1; min-width: 0; overflow-wrap: anywhere; padding-bottom: 4px; }
+.calculator-wrap .growth-detail b { overflow-wrap: anywhere; }
+.calculator-wrap .stepper { top: 5px; right: 5px; flex-direction: row; gap: 4px; }
+.calculator-wrap .stepper button { width: 38px; height: 38px; border-radius: 8px; font-size: 20px; }
+.calculator-wrap .input-wrap input { padding-right: 142px; }
+.calculator-wrap .input-wrap>b { right: 91px; }
+.calculator-wrap .currency-input { padding-right: 94px; }
+.calculator-wrap .currency-input>label { flex-basis: 88px; }
+.calculator-wrap .currency-input>.stepper { top: 50%; right: 7px; transform: translateY(-50%); flex-direction: row; }
+.calculator-wrap .currency-input>.stepper button { width: 38px; height: 38px; font-size: 20px; }
+.loan-schedule .schedule-legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 14px; color: #7c869b; font-size: 10px; }
+.schedule-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.schedule-legend i { width: 9px; height: 9px; border-radius: 2px; }
+.schedule-principal { background: #34a889; }
+.schedule-interest { background: #e6a650; }
+.loan-year-row { padding: 12px 0; border-top: 1px solid #eef0f7; }
+.loan-year-heading { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; color: #59647a; font-size: 11px; }
+.loan-year-heading strong { color: #20273c; font-size: 11px; text-align: right; }
+.loan-balance-track { height: 8px; margin: 8px 0; overflow: hidden; border-radius: 8px; background: #edf0f7; }
+.loan-balance-track i { display: block; height: 100%; border-radius: inherit; background: #8f7cdb; }
+.loan-year-details { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; color: #7c869b; font-size: 10px; }
+.loan-year-details span { display: flex; flex-direction: column; gap: 3px; }
+.loan-year-details span:first-child b { color: #238a68; }
+.loan-year-details span:last-child b { color: #bc8128; }
+.schedule-toggle { width: 100%; min-height: 44px; margin-top: 10px; border: 1px solid #d8dced; border-radius: 8px; background: #f7f8fc; color: #5149a1; font-size: 12px; font-weight: 800; }
+.schedule-toggle:hover,.schedule-toggle:focus-visible { background: #eef0ff; }
+@media (max-width: 560px) {
+	.quotes .quote:nth-child(3) { border-bottom: 1px solid rgba(219,226,255,.1); }
+	.calculator-wrap .growth { min-height: 0; }
+	.calculator-wrap .growth-detail { gap: 9px 12px; }
+	.calculator-wrap .growth-detail>strong { margin-top: 2px; }
+	.calculator-wrap .currency-input { padding-right: 92px; }
+	.calculator-wrap .currency-input>label { flex-basis: 76px; }
+	.calculator-wrap .currency-input>.stepper button { width: 36px; height: 40px; }
+	.calculator-wrap .stepper button { width: 40px; height: 40px; }
+	.calculator-wrap .input-wrap input { padding-right: 142px; }
+	.calculator-wrap .input-wrap>b { right: 94px; }
+}
 @media (max-width: 560px) {
 	.calculator-wrap .loan-layout,
 	.calculator-wrap .invest-layout,
 	.calculator-wrap .fuel-layout { grid-template-columns: 1fr; }
 	.calculator-wrap .payment-box { min-width: 0; overflow: hidden; }
 	.calculator-wrap .payment-box strong { font-size: clamp(28px, 9vw, 38px); letter-spacing: -1px; overflow-wrap: anywhere; }
-	.calculator-wrap .growth { height: 224px; padding: 16px 12px 12px; overflow: hidden; }
+	.calculator-wrap .growth { height: auto; min-height: 0; padding: 16px 12px 12px; overflow: visible; }
 	.calculator-wrap .growth .chart-head { gap: 8px; align-items: flex-start; }
 	.calculator-wrap .growth .chart-head b { max-width: 58%; line-height: 1.25; }
 	.calculator-wrap .growth .chart-head small { text-align: right; line-height: 1.3; }
