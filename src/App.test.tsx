@@ -89,6 +89,8 @@ describe('utils kalkulačky', () => {
   it('u investic vykreslí detail pro každý rok a upozorní na neplatný horizont', () => {
     render(<App />)
     open('Investování')
+    expect(document.querySelector('.tool-card.green .trend-icon b')).not.toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /Vývoj portfolia/ })).toHaveAttribute('viewBox', '0 0 420 174')
     expect(screen.getByRole('slider', { name: 'Zvolený rok grafu' })).toHaveValue('15')
     expect(screen.getByText('Hodnota portfolia v čase')).toBeInTheDocument()
     expect(screen.getAllByText(/1\s235\s782 Kč/)).toHaveLength(2)

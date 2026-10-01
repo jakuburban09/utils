@@ -110,7 +110,7 @@ function App() {
 function Quote({ label, value }: { label: string; value: string }) { return <div className="quote"><span>{label}</span><b>{value}</b><small>v CZK</small></div> }
 
 function TrendIcon() {
-  return <span className="trend-icon" aria-hidden="true"><i /><i /><i /><b>↗</b></span>
+  return <span className="trend-icon" aria-hidden="true"><i /><i /><i /></span>
 }
 
 function HelpfulNotes({ active }: { active: Tool }) {
@@ -266,11 +266,11 @@ function InvestmentCalculator() {
   const selected = annualData.find(item => item.year === selectedYear) ?? annualData.at(-1)
   const chartData = [{ year: 0, value: start, deposits: start, gain: 0 }, ...annualData]
   const maximum = Math.max(...chartData.map(item => item.value), 1)
-  const chartX = (year: number) => 40 + year / Math.max(1, y) * 304
+  const chartX = (year: number) => 90 + year / Math.max(1, y) * 320
   const chartY = (value: number) => 145 - value / maximum * 118
   const portfolioPoints = chartData.map(item => `${chartX(item.year)},${chartY(item.value)}`).join(' ')
   const depositPoints = chartData.map(item => `${chartX(item.year)},${chartY(item.deposits)}`).join(' ')
-  const portfolioArea = `${portfolioPoints} ${chartX(y)},145 40,145`
+  const portfolioArea = `${portfolioPoints} ${chartX(y)},145 90,145`
   const selectedX = chartX(selectedYear)
   const selectedY = selected ? chartY(selected.value) : 145
   const axisMoney = (value: number) => `${new Intl.NumberFormat('cs-CZ', { notation: 'compact', maximumFractionDigits: 1 }).format(value)} Kč`
@@ -288,16 +288,16 @@ function InvestmentCalculator() {
       <div className="growth investment-chart">
         <div className="chart-head"><b>Hodnota portfolia v čase</b><small>Posuňte jezdec pro výběr roku</small></div>
         <div className="growth-legend"><span><i className="legend-portfolio" /> Hodnota portfolia</span><span><i className="legend-deposits" /> Vklady</span></div>
-        <svg className="investment-plot" viewBox="0 0 360 174" preserveAspectRatio="none" role="img" aria-label={`Vývoj portfolia od ${money(start)} na ${money(finalValue)} během ${y} let`}>
-          {[0, 0.5, 1].map(fraction => { const yPosition = 145 - fraction * 118; return <g key={fraction}><line x1="40" x2="350" y1={yPosition} y2={yPosition} className="plot-gridline" /><text x="36" y={yPosition - 4} textAnchor="end" className="plot-axis-label">{axisMoney(maximum * fraction)}</text></g>})}
+        <svg className="investment-plot" viewBox="0 0 420 174" preserveAspectRatio="none" role="img" aria-label={`Vývoj portfolia od ${money(start)} na ${money(finalValue)} během ${y} let`}>
+          {[0, 0.5, 1].map(fraction => { const yPosition = 145 - fraction * 118; return <g key={fraction}><line x1="90" x2="410" y1={yPosition} y2={yPosition} className="plot-gridline" /><text x="83" y={yPosition - 4} textAnchor="end" className="plot-axis-label">{axisMoney(maximum * fraction)}</text></g>})}
           <polygon points={portfolioArea} className="plot-area" />
           <polyline points={depositPoints} className="plot-deposits" />
           <polyline points={portfolioPoints} className="plot-portfolio" />
           <line x1={selectedX} x2={selectedX} y1="14" y2="145" className="plot-cursor" />
           {selected && <><circle cx={selectedX} cy={chartY(selected.deposits)} r="4" className="plot-selected-deposit" /><circle cx={selectedX} cy={selectedY} r="5" className="plot-selected-value" /></>}
-          <text x="40" y="166" textAnchor="middle" className="plot-axis-label">0</text>
+          <text x="90" y="166" textAnchor="middle" className="plot-axis-label">0</text>
           <text x={chartX(Math.max(1, Math.round(y / 2)))} y="166" textAnchor="middle" className="plot-axis-label">{Math.max(1, Math.round(y / 2))}</text>
-          <text x="344" y="166" textAnchor="middle" className="plot-axis-label">{y} let</text>
+          <text x="408" y="166" textAnchor="middle" className="plot-axis-label">{y} let</text>
         </svg>
         <label className="chart-slider-label" htmlFor="investment-year-slider">Zobrazený rok: <b>{selected?.year ?? 0}. rok</b></label>
         <input id="investment-year-slider" className="chart-slider" type="range" min="1" max={y} value={selected?.year ?? 1} onChange={event => setChartYear(Number(event.target.value))} aria-label="Zvolený rok grafu" />
