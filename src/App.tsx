@@ -20,7 +20,7 @@ const compact = (value: number) => new Intl.NumberFormat('cs-CZ', { maximumFract
 const tools: { id: Exclude<Tool, 'home'>; icon: string; title: string; label: string; description: string; tint: string }[] = [
   { id: 'currency', icon: '⇄', title: 'Konverze měn', label: 'Aktuální kurzy', description: 'CZK, EUR, USD a GBP přehledně na jednom místě.', tint: 'cyan' },
   { id: 'loan', icon: '⌁', title: 'Úvěry a hypotéky', label: 'Plán splácení', description: 'Splátka, přeplacení i vývoj zůstatku.', tint: 'violet' },
-  { id: 'invest', icon: '↗', title: 'Investování', label: 'Síla času', description: 'Zjistěte, jak může růst pravidelné investování.', tint: 'green' },
+  { id: 'invest', icon: 'chart', title: 'Investování', label: 'Síla času', description: 'Zjistěte, jak může růst pravidelné investování.', tint: 'green' },
   { id: 'fuel', icon: '⛽', title: 'Cena cesty', label: 'Benzín a nafta', description: 'Spočítejte palivo, náklady i podíl pro posádku.', tint: 'orange' },
 ]
 
@@ -60,6 +60,7 @@ function App() {
   }, [])
 
   const go = (tool: Tool) => { setActive(tool); window.setTimeout(() => document.getElementById('calculator')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0) }
+  const handleNavAction = () => document.getElementById(active === 'home' ? 'tool-grid' : 'calculator')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
 
   return <main>
     <nav className="nav shell">
@@ -67,7 +68,7 @@ function App() {
       <div className="nav-links">
         {tools.map(tool => <button className={active === tool.id ? 'selected' : ''} onClick={() => go(tool.id)} key={tool.id}>{tool.title}</button>)}
       </div>
-      <button className="nav-cta" onClick={() => go('fuel')}>Začít počítat <b>→</b></button>
+      <button className="nav-cta" onClick={handleNavAction} aria-label={active === 'home' ? 'Vybrat kalkulačku' : 'Přejít k otevřené kalkulačce'}><span>{active === 'home' ? 'Vybrat kalkulačku' : 'Přejít k výpočtu'}</span><b>→</b></button>
     </nav>
 
     {/* Hero sekce je dočasně skrytá; ponecháváme ji v historii Git pro snadné obnovení. */}
@@ -85,9 +86,9 @@ function App() {
       <p className="market-note">Kovy: orientační spotová cena v Kč. Zlato a platina za trojskou unci (31,1 g), stříbro za kilogram; bez marže obchodníka.</p>
     </section>
 
-    <section className="tool-grid shell" aria-label="Kalkulačky">
+    <section id="tool-grid" className="tool-grid shell" aria-label="Kalkulačky">
       {tools.map((tool, index) => <button className={`tool-card ${tool.tint}`} onClick={() => go(tool.id)} key={tool.id}>
-        <span className="tool-number">0{index + 1}</span><span className="tool-icon">{tool.icon}</span><span className="tool-label">{tool.label}</span><strong>{tool.title}</strong><span className="tool-description">{tool.description}</span><span className="tool-arrow">→</span>
+        <span className="tool-number">0{index + 1}</span><span className="tool-icon">{tool.icon === 'chart' ? <TrendIcon /> : tool.icon}</span><span className="tool-label">{tool.label}</span><strong>{tool.title}</strong><span className="tool-description">{tool.description}</span><span className="tool-arrow">→</span>
       </button>)}
     </section>
 
@@ -107,6 +108,10 @@ function App() {
 }
 
 function Quote({ label, value }: { label: string; value: string }) { return <div className="quote"><span>{label}</span><b>{value}</b><small>v CZK</small></div> }
+
+function TrendIcon() {
+  return <span className="trend-icon" aria-hidden="true"><i /><i /><i /><b>↗</b></span>
+}
 
 function HelpfulNotes({ active }: { active: Tool }) {
   const notes = active === 'loan'
@@ -156,7 +161,7 @@ function CurrencyCalculator({ rates, updated }: { rates: Rates; updated: string 
     const czk = number(raw) / rates[code]
     setValues(Object.fromEntries(codes.map(currency => [currency, raw === '' ? '' : compact(czk * rates[currency])])) as Record<keyof Rates, string>)
   }
-  return <div className="currency-card"><div className="currency-top"><div><span className="live">● ŽIVÉ KURZY</span><h3>Kolik dostanete za své peníze?</h3><p>{updated}. Kurz lze změnit přepsáním kteréhokoliv pole.</p></div><span className="currency-mark">⇄</span></div><div className="currency-grid">{codes.map(code => {
+  return <div className="currency-card"><div className="currency-top"><div className="currency-topline"><span className="live">● ŽIVÉ KURZY</span><span className="currency-mark" aria-hidden="true">⇄</span></div><h3>Kolik dostanete za své peníze?</h3><p>{updated}. Kurz lze změnit přepsáním kteréhokoliv pole.</p></div><div className="currency-grid">{codes.map(code => {
     const id = `currency-${code}`
     const label = code === 'CZK' ? 'Česká koruna' : code === 'EUR' ? 'Euro' : code === 'USD' ? 'Americký dolar' : 'Britská libra'
     return <div className="currency-input" key={code}><label htmlFor={id}><b>{code}</b><small>{label}</small></label><input id={id} inputMode="decimal" value={values[code]} onChange={e => update(code, e.target.value)} onBlur={e => update(code, groupedInput(e.target.value))} /><span className="stepper" role="group" aria-label={`Upravit částku v ${code}`}><button type="button" aria-label="Snížit" title={`Snížit ${code}`} onClick={() => update(code, String(Math.max(0, number(values[code]) - 1)))}>−</button><button type="button" aria-label="Zvýšit" title={`Zvýšit ${code}`} onClick={() => update(code, String(number(values[code]) + 1))}>+</button></span></div>
@@ -257,14 +262,21 @@ function InvestmentCalculator() {
   const finalValue = valueAt(y), invested = start + monthlyValue * n, gain = finalValue - invested
   const error = start < 0 || monthlyValue < 0 || (!start && !monthlyValue) ? 'Zadejte počáteční vklad, měsíční vklad, nebo obojí.' : number(rate) < -50 || number(rate) > 30 ? 'Očekávaný roční výnos zadejte v rozsahu −50 až 30 %.' : !y || y > 60 ? 'Délka investice je pro přehledný roční graf 1 až 60 let.' : ''
   const annualData = useMemo(() => Array.from({ length: Math.max(0, y) }, (_, index) => { const year = index + 1, value = valueAt(year), deposits = start + monthlyValue * year * 12; return { year, value, deposits, gain: value - deposits } }), [y, start, monthlyValue, r])
-  const maximum = Math.max(...annualData.map(item => item.value), 1)
-  const interval = Math.max(1, Math.ceil(annualData.length / 10))
   const selectedYear = Math.min(chartYear, y)
-  const chartData = annualData.filter((item, index) => index % interval === 0 || index === annualData.length - 1 || item.year === selectedYear)
   const selected = annualData.find(item => item.year === selectedYear) ?? annualData.at(-1)
+  const chartData = [{ year: 0, value: start, deposits: start, gain: 0 }, ...annualData]
+  const maximum = Math.max(...chartData.map(item => item.value), 1)
+  const chartX = (year: number) => 40 + year / Math.max(1, y) * 304
+  const chartY = (value: number) => 145 - value / maximum * 118
+  const portfolioPoints = chartData.map(item => `${chartX(item.year)},${chartY(item.value)}`).join(' ')
+  const depositPoints = chartData.map(item => `${chartX(item.year)},${chartY(item.deposits)}`).join(' ')
+  const portfolioArea = `${portfolioPoints} ${chartX(y)},145 40,145`
+  const selectedX = chartX(selectedYear)
+  const selectedY = selected ? chartY(selected.value) : 145
+  const axisMoney = (value: number) => `${new Intl.NumberFormat('cs-CZ', { notation: 'compact', maximumFractionDigits: 1 }).format(value)} Kč`
 
   return <div className="calc-layout invest-layout">
-    <div className="form-card"><div className="form-title"><span>↗</span><div><h3>Investiční plán</h3><p>Model pravidelného zhodnocování.</p></div></div><div className="fields one-col">
+    <div className="form-card"><div className="form-title"><span className="form-trend-icon"><TrendIcon /></span><div><h3>Investiční plán</h3><p>Model pravidelného zhodnocování.</p></div></div><div className="fields one-col">
       <Field label="Počáteční vklad" value={initial} onChange={setInitial} suffix="Kč" step="1000" />
       <Field label="Měsíční vklad" value={monthly} onChange={setMonthly} suffix="Kč" step="500" />
       <Field label="Očekávaný výnos" value={rate} onChange={setRate} suffix="% p.a." step="0.1" />
@@ -273,12 +285,22 @@ function InvestmentCalculator() {
     <div className="investment-results">{error ? <Notice>{error}</Notice> : <>
       <div className="payment-box green-box"><p>ODHAD HODNOTY PORTFOLIA</p><strong>{money(finalValue)}</strong><span>po {years} letech, při měsíčním připisování výnosu</span></div>
       <div className="stat-grid"><div><span>Vaše vklady</span><b>{money(invested)}</b></div><div><span>Potenciální výnos</span><b className="accent-green">{money(gain)}</b></div></div>
-      <div className="growth">
-        <div className="chart-head"><b>Hodnota portfolia v čase</b><small>Klepnutím na sloupec vyberte rok</small></div>
-        <div className="growth-legend"><span><i className="legend-deposits" /> Vklady</span><span><i className="legend-gain" /> Výnos</span></div>
-        <div className="growth-bars" role="group" aria-label="Vývoj investice po letech">{chartData.map(item => <button type="button" className={`growth-step ${selected?.year === item.year ? 'selected' : ''}`} key={item.year} onClick={() => setChartYear(item.year)} aria-pressed={selected?.year === item.year} aria-label={`${item.year}. rok: portfolio ${money(item.value)}, vklady ${money(item.deposits)}, výnos ${money(item.gain)}`}>
-          <span className="growth-stack" style={{ height: `${Math.max(4, item.value / maximum * 100)}%` }}><i className="growth-deposits" style={{ height: `${item.value > 0 ? Math.min(100, Math.max(0, item.deposits / item.value * 100)) : 0}%` }} /><i className="growth-gain" style={{ height: `${item.value > 0 ? Math.min(100, Math.max(0, item.gain / item.value * 100)) : 0}%` }} /></span><span className="growth-year">{item.year}</span>
-        </button>)}</div>
+      <div className="growth investment-chart">
+        <div className="chart-head"><b>Hodnota portfolia v čase</b><small>Posuňte jezdec pro výběr roku</small></div>
+        <div className="growth-legend"><span><i className="legend-portfolio" /> Hodnota portfolia</span><span><i className="legend-deposits" /> Vklady</span></div>
+        <svg className="investment-plot" viewBox="0 0 360 174" preserveAspectRatio="none" role="img" aria-label={`Vývoj portfolia od ${money(start)} na ${money(finalValue)} během ${y} let`}>
+          {[0, 0.5, 1].map(fraction => { const yPosition = 145 - fraction * 118; return <g key={fraction}><line x1="40" x2="350" y1={yPosition} y2={yPosition} className="plot-gridline" /><text x="36" y={yPosition - 4} textAnchor="end" className="plot-axis-label">{axisMoney(maximum * fraction)}</text></g>})}
+          <polygon points={portfolioArea} className="plot-area" />
+          <polyline points={depositPoints} className="plot-deposits" />
+          <polyline points={portfolioPoints} className="plot-portfolio" />
+          <line x1={selectedX} x2={selectedX} y1="14" y2="145" className="plot-cursor" />
+          {selected && <><circle cx={selectedX} cy={chartY(selected.deposits)} r="4" className="plot-selected-deposit" /><circle cx={selectedX} cy={selectedY} r="5" className="plot-selected-value" /></>}
+          <text x="40" y="166" textAnchor="middle" className="plot-axis-label">0</text>
+          <text x={chartX(Math.max(1, Math.round(y / 2)))} y="166" textAnchor="middle" className="plot-axis-label">{Math.max(1, Math.round(y / 2))}</text>
+          <text x="344" y="166" textAnchor="middle" className="plot-axis-label">{y} let</text>
+        </svg>
+        <label className="chart-slider-label" htmlFor="investment-year-slider">Zobrazený rok: <b>{selected?.year ?? 0}. rok</b></label>
+        <input id="investment-year-slider" className="chart-slider" type="range" min="1" max={y} value={selected?.year ?? 1} onChange={event => setChartYear(Number(event.target.value))} aria-label="Zvolený rok grafu" />
         {selected && <div className="growth-detail" aria-live="polite"><strong>{selected.year}. rok</strong><span>Hodnota portfolia <b>{money(selected.value)}</b></span><span>Vklady <b>{money(selected.deposits)}</b></span><span>Výnos <b className={selected.gain < 0 ? 'loss' : 'accent-green'}>{money(selected.gain)}</b></span></div>}
       </div>
       <div className="tip green-tip">✦ Výnos není garantovaný. Delší horizont pomáhá ustát běžné výkyvy trhu.</div>

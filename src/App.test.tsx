@@ -23,6 +23,19 @@ describe('utils kalkulačky', () => {
     expect(screen.getByText(/Spotřebujete/)).toBeInTheDocument()
   })
 
+  it('navigační šipka nejdřív ukáže dlaždice a potom přejde k otevřené kalkulačce', () => {
+    render(<App />)
+    const tiles = document.getElementById('tool-grid')!
+    const calculator = document.getElementById('calculator')!
+    tiles.scrollIntoView = vi.fn()
+    calculator.scrollIntoView = vi.fn()
+    fireEvent.click(screen.getByRole('button', { name: 'Vybrat kalkulačku' }))
+    expect(tiles.scrollIntoView).toHaveBeenCalled()
+    open('Konverze měn')
+    fireEvent.click(screen.getByRole('button', { name: 'Přejít k otevřené kalkulačce' }))
+    expect(calculator.scrollIntoView).toHaveBeenCalled()
+  })
+
   it('u paliva vysvětlí neplatnou vzdálenost', () => {
     render(<App />)
     open('Cena cesty')
@@ -35,6 +48,8 @@ describe('utils kalkulačky', () => {
     open('Konverze měn')
     expect(screen.getByText('Kolik dostanete za své peníze?')).toBeInTheDocument()
     expect(screen.getByDisplayValue('1 000')).toBeInTheDocument()
+    expect(document.querySelectorAll('.market .stepper')).toHaveLength(0)
+    expect(screen.getByRole('textbox', { name: /Euro/ })).toHaveAttribute('id', 'currency-EUR')
     expect(screen.getByText(/Kurzy se načítají z veřejného zdroje/)).toBeInTheDocument()
   })
 
@@ -74,11 +89,10 @@ describe('utils kalkulačky', () => {
   it('u investic vykreslí detail pro každý rok a upozorní na neplatný horizont', () => {
     render(<App />)
     open('Investování')
-    expect(screen.getByRole('button', { name: /^1\. rok: portfolio/ })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /^15\. rok: portfolio/ })).toBeInTheDocument()
+    expect(screen.getByRole('slider', { name: 'Zvolený rok grafu' })).toHaveValue('15')
     expect(screen.getByText('Hodnota portfolia v čase')).toBeInTheDocument()
     expect(screen.getAllByText(/1\s235\s782 Kč/)).toHaveLength(2)
-    fireEvent.click(screen.getByRole('button', { name: /^1\. rok: portfolio/ }))
+    fireEvent.change(screen.getByRole('slider', { name: 'Zvolený rok grafu' }), { target: { value: '1' } })
     expect(screen.getByText(/8\s407 Kč/)).toBeInTheDocument()
     fireEvent.change(screen.getByRole('textbox', { name: /Délka investice/ }), { target: { value: '61' } })
     expect(screen.getByRole('alert')).toHaveTextContent('1 až 60 let')
